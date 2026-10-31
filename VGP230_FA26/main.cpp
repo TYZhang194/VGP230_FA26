@@ -489,8 +489,89 @@ void TriangleShapeFunction()
     CloseWindow();
 }
 
+void HypotrochoidDrawing()
+{
+    InitWindow(800, 800, "Animated Hypotrochoid");
+    SetTargetFPS(60);
+
+	float R = 150.0f; // Radius of the fixed circle
+	float r = 60.0f;  // Radius of the rolling circle
+	float d = 90.0f;  // Distance from the center of the rolling circle to the drawing point
+
+    Vector2 center = { 400.0f, 400.0f };
+
+	float maxT = 0.0f; // Angle of the hypotrochoid drawing point, in radians
+	float speed = 2.0f; // Speed of the drawing point
+
+    while (!WindowShouldClose())
+    {
+		maxT += speed * GetFrameTime(); // Update the angle based on the speed and frame time
+
+		if (IsKeyPressed(KEY_R)) // Reset the angle to 0 when the R key is pressed, part of the drawing alteration
+        {
+            maxT = 0.0f; 
+        }
+
+		if (IsKeyPressed(KEY_Q)) { R += 10.0f; } // At the press of Q/W/E key, the values of R/r/d will increase by 10
+        if (IsKeyPressed(KEY_W)) { r += 10.0f; }
+        if (IsKeyPressed(KEY_E)) { d += 10.0f; }
+
+		if (IsKeyPressed(KEY_A)) { R -= 10.0f; } // Vise versa, at the press of A/S/D key, the values of R/r/d will decrease by 10
+        if (IsKeyPressed(KEY_S)) { r -= 10.0f; }
+        if (IsKeyPressed(KEY_D)) { d -= 10.0f; }
+
+		if (R < 5.0f) { R = 5.0f; } // Limit the values of R/r/d to a minimum of 5/0/0, respectively
+        if (r < 5.0f) { r = 5.0f; }
+        if (d < 0.0f) { d = 0.0f; }
+
+		float smallX = center.x + (R - r) * cosf(maxT); // Calculate the position of the center of the rolling circle, for drawing the CircleLines
+		float smallY = center.y + (R - r) * sinf(maxT); 
+
+		float penX = smallX + d * cosf((R - r) / r * maxT); // Calculate the position of the drawing point, for drawing the line from the center of the rolling circle to the drawing point
+        float penY = smallY - d * sinf((R - r) / r * maxT);
+
+        BeginDrawing();
+        ClearBackground(BLACK);
+		DrawCircle((int)center.x, (int)center.y, 4, WHITE); // Draw the center point of the larger fixed circle
+		DrawCircleLines((int)center.x, (int)center.y, R, GRAY); // Draw the larger fixed circle
+
+		for (float t = 0.0f; t < maxT; t += 0.01f) // Draw the hypotrochoid curve by connecting points with lines
+        {
+			float nextT = fminf(t + 0.01f, maxT); // nextT always returns the next point in the hypotrochoid curve, but will not exceed maxT
+
+            float x1 = (R - r) * cosf(t) + d * cosf((R - r) / r * t); 
+
+            float y1 = (R - r) * sinf(t) - d * sinf((R - r) / r * t); 
+
+			float x2 = (R - r) * cosf(nextT) + d * cosf((R - r) / r * nextT); // This is doing the calculation for the next point in the hypotrochoid curve, not necessary if we were to only use dots.
+
+			float y2 = (R - r) * sinf(nextT) - d * sinf((R - r) / r * nextT);
+
+            DrawLine((int)(center.x + x1), (int)(center.y + y1), (int)(center.x + x2), (int)(center.y + y2), SKYBLUE); 
+        }
+
+		DrawCircleLines((int)smallX, (int)smallY, r, YELLOW); // Draw the rolling circle
+
+		DrawLine((int)smallX, (int)smallY, (int)penX, (int)penY, RED); // Draw the line from the center of the rolling circle to the drawing point
+
+		DrawCircle((int)penX, (int)penY, 5.0f, GREEN); // Draw the drawing point
+
+        DrawText("Press R to reset, Q/W/E to increase R/r/d, A/S/D to decrease R/r/d", 10, 10, 20, WHITE);
+
+        DrawText(TextFormat("Outer Circle Radius (R): %i", (int)R), 10, 40, 20, WHITE);
+
+        DrawText(TextFormat("Inner Circle Radius (r): %i", (int)r), 10, 70, 20, WHITE);
+
+        DrawText(TextFormat("Pen Distance (d): %i", (int)d), 10, 100, 20, WHITE);
+
+        EndDrawing();
+    }
+
+    CloseWindow();
+}
+
 int main()
 {
-    TriangleShapeFunction();
+    HypotrochoidDrawing();
     return 0;
 }
